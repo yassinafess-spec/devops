@@ -1,0 +1,33 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ] # Se lance dès que tu fais un push
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/quiz-app:latest ./app
+          docker push ${{ secrets.DOCKER_USERNAME }}/quiz-app:latest
+
+      - name: Deploy to Kubernetes via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.IP_MASTER }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Commande pour forcer la mise à jour sur ton AWS
+            sudo kubectl rollout restart deployment/quiz-deployment
