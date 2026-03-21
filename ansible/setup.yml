@@ -1,0 +1,28 @@
+---
+- name: 1. Installer Docker sur tous les serveurs
+  hosts: all
+  become: yes
+  tasks:
+    - name: Mise à jour apt
+      apt: update_cache=yes
+    - name: Installation de Docker
+      apt: name=docker.io state=present
+    - name: Ajouter l'utilisateur au groupe docker
+      user: name=ubuntu groups=docker append=yes
+
+- name: 2. Installer le Master Kubernetes (K3s)
+  hosts: masters
+  become: yes
+  tasks:
+    - name: Installer K3s Server
+      shell: curl -sfL https://get.k3s.io | sh -
+    - name: Récupérer le Token du Master
+      command: cat /var/lib/rancher/k3s/server/node-token
+      register: node_token
+
+- name: 3. Installer le Worker et le joindre au Master
+  hosts: workers
+  become: yes
+  tasks:
+    - name: Installer K3s Agent
+      shell: "curl -sfL https://get.k3s.io | K3S_URL=https://{{ hostvars['master_node']['ansible_host'] }}:6443 K3S_TOKEN={{ hostvars['master_node']['node_token']['stdout'] }} sh -"
