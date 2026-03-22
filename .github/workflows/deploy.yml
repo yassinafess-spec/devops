@@ -11,7 +11,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -24,8 +24,8 @@ jobs:
 
     - name: Build and Push Docker image
       run: |
-        # On construit l'image avec le tag latest pour l'automatisme
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/quiz-app:latest ./app
+        # FORCER la reconstruction sans cache
+        docker build --no-cache -t ${{ secrets.DOCKER_USERNAME }}/quiz-app:latest ./app
         docker push ${{ secrets.DOCKER_USERNAME }}/quiz-app:latest
 
     - name: Deploy to Kubernetes via SSH
@@ -35,13 +35,13 @@ jobs:
         username: ubuntu
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          # 1. On s'assure que le déploiement utilise bien l'image latest
+          # FORCER Kubernetes à retélécharger l'image
           sudo kubectl set image deployment/quiz-deployment quiz-container=${{ secrets.DOCKER_USERNAME }}/quiz-app:latest
-          
-          # 2. On force Kubernetes à retélécharger l'image même si le nom n'a pas changé
           sudo kubectl rollout restart deployment/quiz-deployment
-          
-          # 3. On attend que le redémarrage soit fini
           sudo kubectl rollout status deployment/quiz-deployment --timeout=120s
           
-          echo "✅ L'application a été mise à jour automatiquement !"
+          # Vérifier le contenu
+          echo "📄 Vérification du titre dans le pod:"
+          sudo kubectl exec -it $(sudo kubectl get pods -l app=quiz-app -o jsonpath='{.items[0].metadata.name}') -- cat templates/index.html | grep "h1"
+          
+          echo "✅ Déploiement terminé!"
