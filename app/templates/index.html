@@ -29,17 +29,14 @@
             overflow: hidden; min-height: 500px; position: relative;
         }
 
-        /* Header */
         .header { background: var(--dark); color: white; padding: 20px; text-align: center; }
         .header h1 { font-size: 1.5rem; letter-spacing: 1px; }
 
-        /* Views */
         .view { padding: 30px; display: none; }
         .view.active { display: block; animation: fadeIn 0.5s ease; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Category Grid */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; margin-top: 20px; }
         .card {
             background: var(--light); border-radius: 12px; padding: 15px; text-align: center;
@@ -49,7 +46,6 @@
         .card .icon { font-size: 2.5rem; margin-bottom: 10px; display: block; }
         .card .name { font-weight: 600; color: var(--dark); font-size: 0.9rem; }
 
-        /* Quiz Area */
         .q-header { display: flex; justify-content: space-between; margin-bottom: 20px; color: var(--dark); font-weight: 600; }
         .question { font-size: 1.3rem; font-weight: 700; color: var(--dark); margin-bottom: 25px; line-height: 1.4; }
         .options { display: grid; gap: 12px; }
@@ -61,32 +57,25 @@
         .option-btn.correct { background: var(--success) !important; color: white; border-color: var(--success); }
         .option-btn.wrong { background: var(--danger) !important; color: white; border-color: var(--danger); }
 
-        /* Results */
         .result-score { font-size: 4rem; font-weight: 800; color: var(--primary); margin: 20px 0; }
         .btn-restart {
             background: var(--primary); color: white; border: none; padding: 12px 30px;
             border-radius: 30px; cursor: pointer; font-weight: 600; font-size: 1rem; margin-top: 20px;
         }
-
-        .loader { text-align: center; padding: 50px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h1>🏆 MASTER QUIZ DEVOPS</h1>
+        <h1>🏆 TEST FINAL RÉUSSI - CHAIMAA</h1>
     </div>
 
-    <!-- 1. Menu de sélection -->
     <div id="view-home" class="view active">
         <h2>Choisissez votre thème :</h2>
-        <div id="categories-grid" class="grid">
-            <!-- Rempli par JS -->
-        </div>
+        <div id="categories-grid" class="grid"></div>
     </div>
 
-    <!-- 2. Zone de Jeu -->
     <div id="view-quiz" class="view">
         <div class="q-header">
             <span id="q-category">Informatique</span>
@@ -94,12 +83,9 @@
             <span id="q-score">Score: 0</span>
         </div>
         <div id="question-text" class="question">Chargement...</div>
-        <div id="options-container" class="options">
-            <!-- Boutons ici -->
-        </div>
+        <div id="options-container" class="options"></div>
     </div>
 
-    <!-- 3. Résultats Finaux -->
     <div id="view-result" class="view" style="text-align: center;">
         <h2>Quiz Terminé !</h2>
         <div id="final-score" class="result-score">0</div>
@@ -112,7 +98,6 @@
     let currentSession = null;
     let currentScore = 0;
 
-    // Charger les catégories au démarrage
     window.onload = () => {
         fetch('/api/categories')
             .then(res => res.json())
@@ -121,17 +106,13 @@
                 data.forEach(cat => {
                     const card = document.createElement('div');
                     card.className = 'card';
-                    card.innerHTML = `
-                        <span class="icon">${cat.icon}</span>
-                        <span class="name">${cat.name}</span>
-                    `;
+                    card.innerHTML = `<span class="icon">${cat.icon}</span><span class="name">${cat.name}</span>`;
                     card.onclick = () => startQuiz(cat.name);
                     grid.appendChild(card);
                 });
             });
     };
 
-    // Démarrer un Quiz
     function startQuiz(category) {
         switchView('view-quiz');
         fetch('/api/quiz/start', {
@@ -146,7 +127,6 @@
         });
     }
 
-    // Afficher la question
     function displayQuestion(data) {
         document.getElementById('q-category').innerText = data.question.category;
         document.getElementById('q-progress').innerText = data.progress;
@@ -164,9 +144,7 @@
         });
     }
 
-    // Envoyer la réponse
     function submitAnswer(index, btn) {
-        // Bloquer les autres boutons
         const allBtns = document.querySelectorAll('.option-btn');
         allBtns.forEach(b => b.disabled = true);
 
@@ -195,7 +173,6 @@
         });
     }
 
-    // Résultats finaux
     function showResults(data) {
         switchView('view-result');
         document.getElementById('final-score').innerText = data.score;
