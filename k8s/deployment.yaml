@@ -14,9 +14,8 @@ spec:
     spec:
       containers:
       - name: quiz-container
-        image: chaimaa00dsbd/quiz-app:v1
-                imagePullPolicy: Always # <--- AJOUTE CETTE LIGNE ICI
-
+        image: chaimaa00dsbd/quiz-app:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 5000
 ---

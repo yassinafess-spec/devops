@@ -5,6 +5,7 @@ on:
     branches: [ main ]
     paths:
       - 'app/**'
+      - 'k8s/**'
   workflow_dispatch:
 
 jobs:
@@ -23,6 +24,7 @@ jobs:
 
     - name: Build and Push Docker image
       run: |
+        # On construit l'image avec le tag latest pour l'automatisme
         docker build -t ${{ secrets.DOCKER_USERNAME }}/quiz-app:latest ./app
         docker push ${{ secrets.DOCKER_USERNAME }}/quiz-app:latest
 
@@ -33,20 +35,13 @@ jobs:
         username: ubuntu
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          # Mettre à jour l'image et forcer le redéploiement
+          # 1. On s'assure que le déploiement utilise bien l'image latest
           sudo kubectl set image deployment/quiz-deployment quiz-container=${{ secrets.DOCKER_USERNAME }}/quiz-app:latest
+          
+          # 2. On force Kubernetes à retélécharger l'image même si le nom n'a pas changé
           sudo kubectl rollout restart deployment/quiz-deployment
+          
+          # 3. On attend que le redémarrage soit fini
           sudo kubectl rollout status deployment/quiz-deployment --timeout=120s
-          echo "✅ Déploiement automatique terminé avec succès!"
-
-    - name: Verify deployment
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.IP_MASTER }}
-        username: ubuntu
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          echo "📊 Statut du déploiement:"
-          sudo kubectl get pods
-          sudo kubectl get svc
-          echo "🌐 Application disponible sur: http://${{ secrets.IP_MASTER }}:30001"
+          
+          echo "✅ L'application a été mise à jour automatiquement !"
