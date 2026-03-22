@@ -35,13 +35,18 @@ jobs:
         username: ubuntu
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          # FORCER Kubernetes à retélécharger l'image
+          # 1. On force la mise à jour de l'image
           sudo kubectl set image deployment/quiz-deployment quiz-container=${{ secrets.DOCKER_USERNAME }}/quiz-app:latest
+          
+          # 2. On force le redémarrage (le Rollout)
           sudo kubectl rollout restart deployment/quiz-deployment
+          
+          # 3. On attend que le déploiement soit terminé avant de vérifier
           sudo kubectl rollout status deployment/quiz-deployment --timeout=120s
           
-          # Vérifier le contenu
-          echo "📄 Vérification du titre dans le pod:"
-          sudo kubectl exec -it $(sudo kubectl get pods -l app=quiz-app -o jsonpath='{.items[0].metadata.name}') -- cat templates/index.html | grep "h1"
+          # 4. Vérification (on retire le -it pour que GitHub Actions ne plante pas)
+          echo "📄 Titre actuel dans le serveur AWS :"
+          POD_NAME=$(sudo kubectl get pods -l app=quiz-app -o jsonpath='{.items[0].metadata.name}')
+          sudo kubectl exec $POD_NAME -- cat templates/index.html | grep "h1"
           
-          echo "✅ Déploiement terminé!"
+          echo "✅ L'application est à jour sur AWS !"
